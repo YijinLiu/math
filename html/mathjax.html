@@ -1,0 +1,57 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>MathJax</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-container fluid>
+                <v-textarea v-model="formula"
+                            @input="onFormulaChanged"
+                            clearable
+                            clear-icon="mdi-close-circle"
+                            label="Please enter the formula:"
+                            rows="10">
+                </v-textarea>
+                <p v-html="formula"></p>
+            </v-container>
+        </v-app>
+    </div>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+        let typesetTimeout = 0;
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: () => ({
+                'formula': '',
+            }),
+            methods: {
+                onFormulaChanged() {
+                    if (typesetTimeout) {
+                        clearTimeout(typesetTimeout);
+                    }
+                    typesetTimeout = setTimeout(() => {
+                        MathJax.typesetPromise();
+                    }, 1000);
+                }
+            },
+        })
+    </script>
+</body>
+</html>
