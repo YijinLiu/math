@@ -5,27 +5,35 @@
 
         <link href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css"
               rel="stylesheet">
+        <style>
+            .xterm-rows > div {
+                padding-bottom: 12px;
+            }
+        </style>
 
         <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js">
         </script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-clipboard@0.1.0/lib/addon-clipboard.min.js">
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-image@0.8.0/lib/addon-image.min.js">
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.11.0/lib/addon-web-links.min.js">
         </script>
-        <script id="MathJax-script" async
-                src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-        </script>
-    </head>
-    <body>
-        <div id="terminal" style="height:-webkit-fill-available"></div>
         <script>
             window.MathJax = {
                 tex: {
                     inlineMath: [['$', '$'], ['\\(', '\\)']]
                 }
             };
-
+        </script>
+        <script id="MathJax-script" async
+                src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+        </script>
+    </head>
+    <body>
+        <div id="terminal" style="height:-webkit-fill-available; overflow:hidden"></div>
+        <script>
             const socketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const socketUrl = `${socketProtocol}//${window.location.host}/ws`;
             let socket;
@@ -34,9 +42,21 @@
                 cursorBlink: true,
                 fontFamily: 'Monospace',
                 fontSize: 16,
-                lineHeight: 1.1
             });
             term.loadAddon(new ClipboardAddon.ClipboardAddon());
+            const imgOpts = {
+                enableSizeReports: true,
+                pixelLimit: 16777216,
+                sixelSupport: true,
+                sixelScrolling: true,
+                sixelPaletteLimit: 256,
+                sixelSizeLimit: 25000000,
+                storageLimit: 128,
+                showPlaceholder: true,
+                iipSupport: true,
+                iipSizeLimit: 20000000
+            };
+            term.loadAddon(new ImageAddon.ImageAddon(imgOpts));
             term.loadAddon(new WebLinksAddon.WebLinksAddon());
             const fitAddon = new FitAddon.FitAddon();
             term.loadAddon(fitAddon);
@@ -66,13 +86,14 @@
                     term.write(evt.data);
                     if (typesetTimeout) clearTimeout(typesetTimeout);
                     typesetTimeout = setTimeout(() => {
+                        console.log('Will run MathJax.typesetPromise.');
                         MathJax.typesetPromise();
                         typesetTimeout = 0;
-                    }, 1000);
+                    }, 2000);
                 };
                 socket.onclose = (evt) => {
-                    console.log('Disconnected. Will reconnect in a second.');
-                    setTimeout(connect, 1000);
+                    //console.log('Disconnected. Will reconnect in a second.');
+                    //setTimeout(connect, 1000);
                 };
                 socket.onerror = (evt) => {
                     console.log('Error. Will reconnect in 3 seconds.');

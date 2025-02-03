@@ -56,8 +56,10 @@ def repl(obj):
 @cli.command()
 @click.argument("query")
 @click.option("--max_new_tokens", type=int, default=1024, help="Max number of new tokens.")
+@click.option("--use_sixel", type=bool, default=False)
+@click.option("--use_html", type=bool, default=False)
 @click.pass_obj
-def search(obj, query, max_new_tokens):
+def search(obj, query: str, max_new_tokens: int, use_sixel: bool, use_html: bool):
     start = timeit.default_timer()
     llm = obj
     prompt = [{"role": "user", "content": query}]
@@ -67,7 +69,8 @@ def search(obj, query, max_new_tokens):
         return_dict=True,
         return_tensors="pt").to(llm._model.device)
     outputs = llm._model.generate(**tokenized_prompt, max_new_tokens=max_new_tokens)
-    click.echo(beautify_llm_outout(llm._tokenizer.decode(outputs[0])))
+    decoded_output = llm._tokenizer.decode(outputs[0])
+    click.echo(beautify_llm_outout(decoded_output, use_sixel=use_sixel, use_html=use_html))
     end = timeit.default_timer()
     click.echo(f"{end-start} seconds used.")
 
