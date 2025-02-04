@@ -4,16 +4,22 @@ from absl import app
 from absl import flags
 import aiohttp
 from aiohttp import web, WSCloseCode
+from aiohttp_basicauth import BasicAuthMiddleware
 import asyncio
 import json
 import logging
 import os
 from ptyprocess import PtyProcess, PtyProcessUnicode
+import ssl
 import threading
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("host", "", "")
-flags.DEFINE_integer("port", 8000, "")
+flags.DEFINE_integer("port", 10443, "")
+flags.DEFINE_string("https_cert_file", "cert.pem", "")
+flags.DEFINE_string("https_key_file", "key.pem", "")
+flags.DEFINE_string("user", "math", "")
+flags.DEFINE_string("password", "Awesome@2025", "")
 flags.DEFINE_boolean("share_sess", True, "");
 flags.DEFINE_integer("log_level", logging.INFO, "");
 
@@ -103,22 +109,19 @@ async def ws_handler(req: web.Request) -> web.Response:
 
     return resp
 
-async def start_server():
-    webApp = web.Application()
+def main(argv):
+    logger.setLevel(FLAGS.log_level)
+    auth = BasicAuthMiddleware(username=FLAGS.user, password=FLAGS.password)
+    webApp = web.Application(middlewares=[auth])
     webApp.add_routes([
         web.static('/html', './html'),
         web.get('/ws', ws_handler),
     ])
-    runner = web.AppRunner(webApp)
-    await runner.setup()
-    site = web.TCPSite(runner, FLAGS.host, FLAGS.port)
-    logging.info("Running HTTP server @%s:%s ...", FLAGS.host, FLAGS.port)
-    await site.start()
-
-def main(argv):
-    logger.setLevel(FLAGS.log_level)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_server())
-    loop.run_forever()
+    ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    # To generate the key & cert"
+    # - openssl genpkey -algorithm RSA -out key.pem
+    # - openssl req -new -x509 -key key.pem -out cert.pem -days 365
+    ssl_ctx.load_cert_chain(FLAGS.https_cert_file, FLAGS.https_key_file)
+    web.run_app(webApp, host=FLAGS.host, port=FLAGS.port, ssl_context=ssl_ctx)
 
 app.run(main)

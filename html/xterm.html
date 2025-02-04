@@ -5,11 +5,6 @@
 
         <link href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css"
               rel="stylesheet">
-        <style>
-            .xterm-rows > div {
-                padding-bottom: 12px;
-            }
-        </style>
 
         <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js">
@@ -43,7 +38,7 @@
                 fontFamily: 'Monospace',
                 fontSize: 16,
             });
-            term.loadAddon(new ClipboardAddon.ClipboardAddon());
+
             const imgOpts = {
                 enableSizeReports: true,
                 pixelLimit: 16777216,
@@ -57,13 +52,25 @@
                 iipSizeLimit: 20000000
             };
             term.loadAddon(new ImageAddon.ImageAddon(imgOpts));
+
             term.loadAddon(new WebLinksAddon.WebLinksAddon());
+
             const fitAddon = new FitAddon.FitAddon();
             term.loadAddon(fitAddon);
-            term.open(document.getElementById('terminal'));
-            term.prompt = () => socket.send('\n');
-            term.onKey(keyObj => socket.send(keyObj.key));
 
+            term.onKey((evt) => socket.send(evt.key));
+            term.attachCustomKeyEventHandler((evt) => {
+                if ((evt.ctrlKey || evt.metaKey) && evt.key === 'v' && evt.type === 'keydown') {
+                    navigator.clipboard.readText().then(text => {
+                        socket.send(text);
+                    });
+                    return false;
+                }
+                return true;
+            });
+
+            const termDiv = document.getElementById('terminal');
+            term.open(termDiv);
             term.onResize((size) => {
                 const msg = {command: 'resize', cols: size.cols, rows: size.rows};
                 const enc = new TextEncoder();
@@ -80,6 +87,7 @@
                 socket.onopen = (evt) => {
                     console.log('Connected.');
                     fitAddon.fit();
+                    term.focus();
                 };
                 socket.onmessage = (evt) => {
                     //console.log('Received', evt.data);
