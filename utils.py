@@ -78,6 +78,9 @@ def split_llm_output_to_lines(text: str) -> list[str]:
 def beautify_llm_outout(text: str, use_sixel=False, use_html=False) -> str:
     text = text.replace("<s>", "")
     text = text.replace("</s>", "")
+    text = text.replace("<｜begin▁of▁sentence｜>", "")
+    text = text.replace("<｜end▁of▁sentence｜>", "")
+    text = text.replace("$$", "$")
     if use_html:
         text = text.replace("\n", "\n<br>\n")
         text = text.replace("[INST]", "<b><i>")

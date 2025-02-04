@@ -5,11 +5,13 @@
 
         <link href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css"
               rel="stylesheet">
+        <!--
         <style>
             .xterm-rows > div:has(.MathJax) {
                 height: 40px !important;
             }
         </style>
+        -->
 
         <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js">
@@ -41,7 +43,8 @@
             const term = new Terminal({
                 cursorBlink: true,
                 fontFamily: 'Monospace',
-                fontSize: 20,
+                fontSize: 16,
+                lineHeight: 1.6,
                 tabStopWidth: 4
             });
 

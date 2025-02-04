@@ -1,10 +1,8 @@
-import os
-import timeit
-
 import click
 import click_repl
+import os
 from prompt_toolkit.history import FileHistory
-
+import timeit
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -33,8 +31,9 @@ class LLM(object):
 
 
 @click.group(invoke_without_command=True)
-@click.option("--model_name", default="mistralai/Mathstral-7b-v0.1",
-              help="deepseek-ai/DeepSeek-R1-Distill-Llama-8B etc.")
+@click.option("--model_name", default="deepseek-ai/deepseek-math-7b-rl",
+              help="mistralai/Mathstral-7b-v0.1 deepseek-ai/deepseek-math-7b-rl " +
+                   "Qwen/Qwen2.5-Math-7B-Instruct etc.")
 @click.pass_context
 def cli(ctx, model_name: str):
     ctx.obj = LLM.instance(model_name)
@@ -62,12 +61,15 @@ def repl(obj):
 def search(obj, query: str, max_new_tokens: int, use_sixel: bool, use_html: bool):
     start = timeit.default_timer()
     llm = obj
-    prompt = [{"role": "user", "content": query}]
-    tokenized_prompt = llm._tokenizer.apply_chat_template(
-        prompt,
-        add_generation_prompt=True,
-        return_dict=True,
-        return_tensors="pt").to(llm._model.device)
+    if llm._tokenizer.chat_template:
+        prompt = [{"role": "user", "content": query}]
+        tokenized_prompt = llm._tokenizer.apply_chat_template(
+            prompt,
+            add_generation_prompt=True,
+            return_dict=True,
+            return_tensors="pt").to(llm._model.device)
+    else:
+        tokenized_prompt = llm._tokenizer(query, return_tensors="pt").to(llm._model.device)
     outputs = llm._model.generate(**tokenized_prompt, max_new_tokens=max_new_tokens)
     decoded_output = llm._tokenizer.decode(outputs[0])
     click.echo(beautify_llm_outout(decoded_output, use_sixel=use_sixel, use_html=use_html))
