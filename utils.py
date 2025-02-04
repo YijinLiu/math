@@ -83,8 +83,8 @@ def beautify_llm_outout(text: str, use_sixel=False, use_html=False) -> str:
         text = text.replace("[INST]", "<b><i>")
         text = text.replace("[/INST]", "</b></i>")
     else:
-        text = text.replace("[INST]", "")
-        text = text.replace("[/INST]", "------\n")
+        text = text.replace("[INST]", "\n----------\n")
+        text = text.replace("[/INST]", "\n----------\n")
     text = "\n".join(split_llm_output_to_lines(text))
     if use_sixel:
         start = text.find("$")

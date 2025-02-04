@@ -5,6 +5,11 @@
 
         <link href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css"
               rel="stylesheet">
+        <style>
+            .xterm-rows > div:has(.MathJax) {
+                height: 40px !important;
+            }
+        </style>
 
         <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js">
@@ -36,7 +41,8 @@
             const term = new Terminal({
                 cursorBlink: true,
                 fontFamily: 'Monospace',
-                fontSize: 16,
+                fontSize: 20,
+                tabStopWidth: 4
             });
 
             const imgOpts = {
@@ -58,7 +64,18 @@
             const fitAddon = new FitAddon.FitAddon();
             term.loadAddon(fitAddon);
 
+            let typesetTimeout = 0;
+            function runMathJax() {
+                if (typesetTimeout) clearTimeout(typesetTimeout);
+                typesetTimeout = setTimeout(() => {
+                    console.log('Will run MathJax.typesetPromise.');
+                    MathJax.typesetPromise();
+                    typesetTimeout = 0;
+                }, 2000);
+            }
+
             term.onKey((evt) => socket.send(evt.key));
+            term.onRender((evt) => runMathJax());
             term.attachCustomKeyEventHandler((evt) => {
                 if ((evt.ctrlKey || evt.metaKey) && evt.key === 'v' && evt.type === 'keydown') {
                     navigator.clipboard.readText().then(text => {
@@ -80,7 +97,8 @@
                 fitAddon.fit();
             }, false);
 
-            let typesetTimeout = 0;
+
+
             function connect() {
                 console.log('Connecting to ', socketUrl);
                 socket = new WebSocket(socketUrl);
@@ -92,12 +110,6 @@
                 socket.onmessage = (evt) => {
                     //console.log('Received', evt.data);
                     term.write(evt.data);
-                    if (typesetTimeout) clearTimeout(typesetTimeout);
-                    typesetTimeout = setTimeout(() => {
-                        console.log('Will run MathJax.typesetPromise.');
-                        MathJax.typesetPromise();
-                        typesetTimeout = 0;
-                    }, 2000);
                 };
                 socket.onclose = (evt) => {
                     //console.log('Disconnected. Will reconnect in a second.');
