@@ -31,7 +31,7 @@ class LLM(object):
 
 
 @click.group(invoke_without_command=True)
-@click.option("--model_name", default="deepseek-ai/deepseek-math-7b-rl",
+@click.option("--model_name", default="mistralai/Mathstral-7b-v0.1",
               help="mistralai/Mathstral-7b-v0.1 deepseek-ai/deepseek-math-7b-rl " +
                    "Qwen/Qwen2.5-Math-7B-Instruct etc.")
 @click.pass_context

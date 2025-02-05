@@ -1,6 +1,7 @@
 from libsixel.encoder import Encoder, SIXEL_OPTFLAG_COLORS, SIXEL_OPTFLAG_OUTPUT
 import matplotlib
 import matplotlib.pyplot as plt
+import re
 import shutil
 import string
 import tempfile
@@ -75,12 +76,17 @@ def split_llm_output_to_lines(text: str) -> list[str]:
 
     return lines
 
+lb_re = re.compile(r"\\[([]\s+")
+rb_re = re.compile(r"\s+\\[])]")
+
 def beautify_llm_outout(text: str, use_sixel=False, use_html=False) -> str:
     text = text.replace("<s>", "")
     text = text.replace("</s>", "")
     text = text.replace("<｜begin▁of▁sentence｜>", "")
     text = text.replace("<｜end▁of▁sentence｜>", "")
     text = text.replace("$$", "$")
+    text = lb_re.sub("$", text)
+    text = rb_re.sub("$", text)
     if use_html:
         text = text.replace("\n", "\n<br>\n")
         text = text.replace("[INST]", "<b><i>")
